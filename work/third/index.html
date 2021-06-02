@@ -24,12 +24,37 @@
     </div>
     <script src="../../common/js/jquery.js"></script>
     <script>
+    // $(function() {
+  //$('.tab-item').click(function() {
+
+    //現在activeが付いているクラスからactiveを外す
+    //$('.active').removeClass('active');
+
+    //クリックされたタブメニューにactiveクラスを付与。
+    //$(this).addClass('active');
+
+    //一旦showクラスを外す
+    //$('.show').removeClass('show');
+
+    //クリックしたタブのインデックス番号取得
+    //const index = $(this).index();
+
+    //タブのインデックス番号と同じコンテンツにshowクラスをつけて表示する
+    //$('.tab-content').eq(index).addClass('show');
+  //});
+//});
       // 今回やるのはタブメニューです。
       // navの小要素であるliをクリックして、contents内の小要素であるli要素を表示させる。
       // .index() 要素のindexを取得します。
       // .eq() 引数に応じたindexの要素を指定します。
       // .addClass() クラスを追加します。
       // .removeClass() クラスを削除します。
+      $(function() {
+        $('.nav').find('li').click(function() {
+        var index = $(this).index();
+        $('.contents li').addClass('is-hidden').eq(index).removeClass('is-hidden');
+        });
+      });
     </script>
   </body>
 </html>
