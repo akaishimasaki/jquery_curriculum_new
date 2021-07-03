@@ -49,8 +49,29 @@
         var prevWord = '';
         var searchWord = '';
         
+        //検索ボタンがクリックされた時の繰り返し処理
+        var search__btn = function() { // .search__btnがクリックされた時の処理
+          var searchWord = $('[data-js="search-word"]').val();// searchWordという変数に.search__text__inputを定義。.search__text__inputのval属性を取得
+          // if(prevWord !== searchWord) { // prevwordがsearchwordと異なるとき
+          //   searchComment();
+          // } else if (prevWord === searchWord) {
+          //   searchComment();
+          // };
+          //console.log(searchWord);
+          //上記中の関数(再検索の処理)
+          // function searchComment() {
+            //pageNum = 1; // pageNumを1にする
+          //   $('ul').empty(); // ulの中身を空にする
+          //   prevWord = searchWord;// searchwordにprevwordを保存
+          // };
+        };
+
+
+        // 定義したsearch__btnという関数の実行
         $('.search__btn').on('click',function() {
-          search__btn(); // 定義したsearch__btnという関数の実行
+          var searchWord = $('[data-js="search-word"]').val();
+          pageNum = 1;
+          bookData();
         });
         
         //通信失敗時の処理
@@ -62,7 +83,7 @@
         };
         
         //通信成功時
-        var success = function(data) {
+        function success(data) {
           if(data.count > 0) {//data.countが０よりも大きいとき
             $.each(data.Items,function(index,value) {// data.Itemsに対して次の関数を繰り返し実行
               var list = $('<li class="lists__item">' +
@@ -75,7 +96,7 @@
                               '</a>' +
                             '</div>' +
                           '</li>');
-              var contentList = $('.lists').append(list);
+              $('.lists').append(list);
               $('.message').empty();
             });
           }
@@ -96,17 +117,18 @@
                         '</div>');
           if(data.count === 0) {
             $('.message').html('<p>検索結果が見つかりませんでした。<br>別のキーワードで検索して下さい。</br>')
-            $('.pager').hide();
+            $('.pager').empty();
           } else if(data.count > 0) {
             $('.lists').append(pager);
           };
+
           //btn-itemの表示設定
           if(data.pageCount === 1) {
             $('btn-item').addClass('disabled');
-          } else if(data.pageCount === data.page) {
+          };
+          if(data.pageCount === data.page) {
             $('[data-js="page-next"]').addClass('disabled');
           };
-
           if(data.page === 1) {
             $('[data-js="page-prev"]').addClass('disabled');
           };
@@ -114,26 +136,23 @@
 
         //ページャの次へと前へのclick処理
         //data属性を[]で囲み値を含めて指定することで、セレクタとして要素にアクセスすることが出来ます。
-        $('[data-js="page-next"]').on('click',function() {
+        
+        $(document).on('click','[data-js="page-next"]',function() {
+          search__btn();
           pageNum++;
         });
-        //検索ボタンがクリックされた時の処理
-        var search__btn = function() { // .search__btnがクリックされた時の処理
-          var searchWord = $('.search__text__input').val();// searchWordという変数に.search__text__inputを定義。.search__text__inputのval属性を取得
-          if(prevWord !== searchWord) { // prevwordがsearchwordと異なるとき
-            searchComment();
-          } else if (prevWord === searchWord) {
-            searchComment();
-          };
-          //console.log(searchWord);
-          //上記中の関数(再検索の処理)
-          function searchComment() {
-            pageNum = 1; // pageNumを1にする
-            $('ul').empty(); // ulの中身を空にする
-            prevWord = searchWord;// searchwordにprevwordを保存
-          };
-          
-          
+      
+      
+        $(document).on('click','[data-js="page-prev"]',function() {
+          search__btn();
+          pageNum--;
+        });
+        
+
+        
+
+        //ajaxでデータ習得の処理
+        function bookData() {
           $.ajax({
             url: 'https://app.rakuten.co.jp/services/api/BooksTotal/Search/20130522',
             type: 'GET',//取得
@@ -148,13 +167,12 @@
             }
           }).done(function(data) {
             success(data);
-            pagerList(data);
-            
+          
           }).fail(function() {
             failMessage();
           })
         };
-      
+        
       });
       // $.ajaxによってデータが取得できたら、必要なデータ(作品名とか作者名とか)を取得します。
       // 取得できたらHTMLに<ul class='lists'></ul>を用意しているので、下のテンプレに沿ってデータを入れ込みましょう。
