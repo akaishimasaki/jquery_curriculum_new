@@ -49,7 +49,25 @@
         var prevWord = '';
         var searchWord = '';
         
-        
+        $(document).on('click','[data-js="page-next"]',function(event) {
+          event.preventDefault();
+          $('.lists').empty();
+          $('.message').empty();
+          if(!($(this).hasClass("disabled"))) {
+            pageNum += 1;
+            getData();
+          }
+        });
+
+        $(document).on('click','[data-js="page-prev"]',function(event) {
+          event.preventDefault();
+          $('.lists').empty();
+          $('.message').empty();
+          if(!($(this).hasClass("disabled"))) {
+            pageNum -= 1;
+            getData();
+          };
+        });
         // var search__btn = function() { // .search__btnがクリックされた時の処理
         //   if(prevWord !== searchWord) { // prevwordがsearchwordと異なるとき
         //     searchComment();
@@ -63,20 +81,18 @@
         //     prevWord = searchWord;// searchWordにprevWordを保存
         //   };
         // };
-
-
         //検索ボタンがクリックされた時の繰り返し処理
         // 定義したsearch__btnという関数の実行
         $('.search__btn').on('click',function() {
+          searchWord = $('[data-js="search-word"]').val();// searchWordという変数に[data-js="search-word"]を定義.[data-js="search-word"]のval属性を取得
           pageNum = 1; // pageNumを1にする
           $('.lists').empty(); // ulの中身を空にする
           $('.message').empty();
           getData();
+          //search__btn();
         });
-        
 
         function getData() {
-          var searchWord = $('[data-js="search-word"]').val();// searchWordという変数に[data-js="search-word"]を定義.[data-js="search-word"]のval属性を取得
           $.ajax({
             url: 'https://app.rakuten.co.jp/services/api/BooksTotal/Search/20130522',
             type: 'GET',
@@ -100,7 +116,6 @@
             failMessage(data);
           })
         };
-
 
         //通信失敗時の処理
         function failMessage(data) {
@@ -149,37 +164,20 @@
           if(data.count > 0) {
             $('.lists').append(pager);
           };
-
-          //btn-itemの表示設定
-          if(data.pageCount === 1) {
-            $('.btn-item').addClass('disabled');
-          } else if(data.pageCount === data.page) {
-            $('[data-js="page-next"]').addClass('disabled');
-          } else if(data.page === 1) {
-            $('[data-js="page-prev"]').addClass('disabled');
-          };
-        };
           
-        
-        
+          if(data.pageCount === pageNum) {
+            $('[data-js="page-next"]').css('pointer-events','none').addClass("disabled");
+          };
+          if(pageNum === 1) {
+            $('[data-js="page-prev"]').css('pointer-events','none').addClass("disabled");
+          };
+          //btn-itemの表示設定
+        };
+      });
         //ページャの次へと前へのclick処理
         //data属性を[]で囲み値を含めて指定することで、セレクタとして要素にアクセスすることが出来ます。
-        $(document).on('click','[data-js="page-next"]',function(e) {
-          e.preventDefault();
-          $('.lists').empty();
-          $('.message').empty();
-          pageNum += 1;
-          getData();
-        });
-
-        $(document).on('click','[data-js="page-prev"]',function(e) {
-          e.preventDefault();
-          $('.lists').empty();
-          $('.message').empty();
-          pageNum -= 1;
-          getData();
-        });
-      });
+        
+      
 
         
 
