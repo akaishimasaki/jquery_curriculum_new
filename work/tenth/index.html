@@ -45,46 +45,76 @@
       //
       $(function() {
         //グローバル変数
-        var pageNum = 0;
+        var pageNum = 1;
         var prevWord = '';
         var searchWord = '';
         
+        
+        // var search__btn = function() { // .search__btnがクリックされた時の処理
+        //   if(prevWord !== searchWord) { // prevwordがsearchwordと異なるとき
+        //     searchComment();
+        //   } else if (prevWord === searchWord) {
+        //     searchComment();
+        //   };
+        //   //(再検索の処理)関数化
+        //   function searchComment() {
+        //     pageNum = 1; // pageNumを1にする
+        //     $('.lists').empty(); // ulの中身を空にする
+        //     prevWord = searchWord;// searchWordにprevWordを保存
+        //   };
+        // };
+
+
         //検索ボタンがクリックされた時の繰り返し処理
-        var search__btn = function() { // .search__btnがクリックされた時の処理
-          var searchWord = $('[data-js="search-word"]').val();// searchWordという変数に.search__text__inputを定義。.search__text__inputのval属性を取得
-          // if(prevWord !== searchWord) { // prevwordがsearchwordと異なるとき
-          //   searchComment();
-          // } else if (prevWord === searchWord) {
-          //   searchComment();
-          // };
-          //console.log(searchWord);
-          //上記中の関数(再検索の処理)
-          // function searchComment() {
-            //pageNum = 1; // pageNumを1にする
-          //   $('ul').empty(); // ulの中身を空にする
-          //   prevWord = searchWord;// searchwordにprevwordを保存
-          // };
+        // 定義したsearch__btnという関数の実行
+        $('.search__btn').on('click',function() {
+          pageNum = 1; // pageNumを1にする
+          $('.lists').empty(); // ulの中身を空にする
+          getData();
+        });
+        
+
+        function getData() {
+          var searchWord = $('[data-js="search-word"]').val();// searchWordという変数に[data-js="search-word"]を定義.[data-js="search-word"]のval属性を取得
+          $.ajax({
+            url: 'https://app.rakuten.co.jp/services/api/BooksTotal/Search/20130522',
+            type: 'GET',
+            datatype: 'json',//形式、共通データ定義言語
+            data: {
+              // 「区分:サービス固有パラメーター」を確認して、必要な情報をdata内に入れましょう。
+              applicationId: appId, //(今回はこの変数をIDとして使用します) ※メンターから別途渡されるファイルを読み込んでください。
+              booksGenreId: '001',
+              hits:20,//一度に検出する商品数
+              keyword: searchWord,  //searchWordが変数になる
+              page: pageNum,//pageNumが変数になる
+            },
+          }).done(function(data) {
+            if(data.count === 0) {
+            $('.message').html('<p>検索結果が見つかりませんでした。<br>別のキーワードで検索して下さい。</br>')
+            $('.pager').empty();
+            };
+            success(data);
+            pagerList(data);
+          }).fail(function(data) {
+            failMessage(data);
+          })
         };
 
 
-        // 定義したsearch__btnという関数の実行
-        $('.search__btn').on('click',function() {
-          var searchWord = $('[data-js="search-word"]').val();
-          pageNum = 1;
-          bookData();
-        });
-        
         //通信失敗時の処理
-        var failMessage = function() {
-          message = $('.message')
-          if(searchWord = '.') {
-            $('.message').html('<p>検索文字が入力されていません。</p>')
-          }
+        function failMessage(data) {
+          if (!navigator.onLine) {
+              $('.message').html('<p>通信に失敗しました。インターネットの接続をご確認ください。</p>');
+            } else if(data.status === 429) {
+              $('.message').html('<p>リクエスト過多です。しばらく時間を置いてからお試しください。</p>');
+            } else if(data.status === 400) {
+              $('.message').html('<p>検索文字が入力されていません。</p>');
+          };
         };
         
         //通信成功時
         function success(data) {
-          if(data.count > 0) {//data.countが０よりも大きいとき
+          if(data.count > 0) {//data.countが0よりも大きいとき
             $.each(data.Items,function(index,value) {// data.Itemsに対して次の関数を繰り返し実行
               var list = $('<li class="lists__item">' +
                             '<div class="lists__item__inner">' +
@@ -99,12 +129,12 @@
               $('.lists').append(list);
               $('.message').empty();
             });
-          }
+          };
         };
 
         //ページャの項目から通信成功時の処理
         // ページャのテンプレート
-        var pagerList = function(data) {
+        function pagerList(data) {
           var pager = $('<div class="pager" data-js="pager">' +
                           '<div class="counter">' +
                             '<span class="counter-current">' + data.page + '</span>' +
@@ -115,65 +145,46 @@
                             '<a class="btn-item" data-js="page-next" href="">次へ</a>' +
                           '</div>' +
                         '</div>');
-          if(data.count === 0) {
-            $('.message').html('<p>検索結果が見つかりませんでした。<br>別のキーワードで検索して下さい。</br>')
-            $('.pager').empty();
-          } else if(data.count > 0) {
+          if(data.count > 0) {
             $('.lists').append(pager);
           };
 
           //btn-itemの表示設定
           if(data.pageCount === 1) {
-            $('btn-item').addClass('disabled');
-          };
-          if(data.pageCount === data.page) {
+            $('.btn-item').addClass('disabled');
+          } else if(data.pageCount === data.page) {
             $('[data-js="page-next"]').addClass('disabled');
-          };
-          if(data.page === 1) {
+          } else if(data.page === 1) {
             $('[data-js="page-prev"]').addClass('disabled');
           };
         };
-
+          
+        
+        
         //ページャの次へと前へのclick処理
         //data属性を[]で囲み値を含めて指定することで、セレクタとして要素にアクセスすることが出来ます。
-        
-        $(document).on('click','[data-js="page-next"]',function() {
-          search__btn();
-          pageNum++;
+        $(document).on('click','[data-js="page-next"]',function(e) {
+          e.preventDefault();
+          $('.lists').empty();
+          $('.message').empty();
+          pageNum += 1;
+          getData();
         });
-      
-      
-        $(document).on('click','[data-js="page-prev"]',function() {
-          search__btn();
-          pageNum--;
+
+        $(document).on('click','[data-js="page-prev"]',function(e) {
+          e.preventDefault();
+          $('.lists').empty();
+          $('.message').empty();
+          pageNum -= 1;
+          getData();
         });
-        
+      });
 
         
 
         //ajaxでデータ習得の処理
-        function bookData() {
-          $.ajax({
-            url: 'https://app.rakuten.co.jp/services/api/BooksTotal/Search/20130522',
-            type: 'GET',//取得
-            datatype: 'json',//形式
-            data: {
-              // 「区分:サービス固有パラメーター」を確認して、必要な情報をdata内に入れましょう。
-              applicationId: appId, //(今回はこの変数をIDとして使用します) ※メンターから別途渡されるファイルを読み込んでください。
-              booksGenreId: '001',
-              hits:20,//一度に検出する商品数
-              keyword: searchWord,  //searchWordが変数になる
-              page: pageNum,//pageNumが変数になる
-            }
-          }).done(function(data) {
-            success(data);
-          
-          }).fail(function() {
-            failMessage();
-          })
-        };
         
-      });
+      
       // $.ajaxによってデータが取得できたら、必要なデータ(作品名とか作者名とか)を取得します。
       // 取得できたらHTMLに<ul class='lists'></ul>を用意しているので、下のテンプレに沿ってデータを入れ込みましょう。
 
